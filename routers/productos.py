@@ -52,3 +52,27 @@ def desactivar_producto(producto_id: int, session: Session = Depends(get_session
     session.add(producto)
     session.commit()
     return {"mensaje":"Producto desactivado"}
+
+@router.post("/{producto_id}/comprar")
+def comprar_producto(producto_id: int, cantidad: int = 1, session: Session = Depends(get_session)):
+    producto = session.get(Producto, producto_id)
+    if not producto or not producto.activo:
+        raise HTTPException(status_code=404)
+    if producto.stock < cantidad:
+        raise HTTPException(status_code=400, detail="Stock insuficiente")
+    producto.stock -= cantidad
+    session.add(producto)
+    session.commit()
+    return {"mensaje": "Compra exitosa", "stock_restante": producto.stock}
+
+@router.post("/{producto_id}/comprar")
+def comprar_producto(producto_id: int, cantidad: int = 1, session: Session = Depends(get_session)):
+    producto = session.get(Producto, producto_id)
+    if not producto or not producto.activo:
+        raise HTTPException(status_code=404)
+    if producto.stock < cantidad:
+        raise HTTPException(status_code=400, detail="Stock insuficiente")
+    producto.stock -= cantidad
+    session.add(producto)
+    session.commit()
+    return {"mensaje": "Compra exitosa", "stock_restante": producto.stock}
