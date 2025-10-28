@@ -19,9 +19,19 @@ def crear_producto(data: ProductoCreate, session: Session = Depends(get_session)
     session.refresh(nuevo)
     return nuevo
 
-@router.get("/", response_model=list[ProductoRead])
-def listar_productos(session: Session = Depends(get_session)):
-    return session.exec(select(Producto).where(Producto.activo == True)).all()
+from typing import Optional
+
+@router.get("/")
+def listar_productos(categoria_id: Optional[int] = None, precio_min: Optional[float] = None, stock_min: Optional[int] = None, session: Session = Depends(get_session)):
+    statement = select(Producto).where(Producto.activo == True)
+    if categoria_id:
+        statement = statement.where(Producto.categoria_id == categoria_id)
+    if precio_min is not None:
+        statement = statement.where(Producto.precio >= precio_min)
+    if stock_min is not None:
+        statement = statement.where(Producto.stock >= stock_min)
+    return session.exec(statement).all()
+
 
 @router.get("/{producto_id}", response_model=ProductoRead)
 def obtener_producto(producto_id: int, session: Session = Depends(get_session)):
