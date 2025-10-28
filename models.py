@@ -1,13 +1,19 @@
-# models.py
-from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlmodel import SQLModel, Field, Relationship
+from typing import Optional, List
+
+class Categoria(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nombre: str
+    descripcion: Optional[str] = None
+    activa: bool = Field(default=True)
+    productos: List["Producto"] = Relationship(back_populates="categoria")
 
 class Producto(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str
     precio: float
+    stock: int
+    descripcion: Optional[str] = None
+    activo: bool = Field(default=True)
     categoria_id: Optional[int] = Field(default=None, foreign_key="categoria.id")
-
-class Categoria(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    nombre: str
+    categoria: Optional[Categoria] = Relationship(back_populates="productos")
