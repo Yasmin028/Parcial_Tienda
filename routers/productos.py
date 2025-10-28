@@ -1,23 +1,24 @@
-# routers/productos.py
-from fastapi import APIRouter, HTTPException
-from sqlmodel import Session, select
-from db import engine
-from models import Producto
+from fastapi import APIRouter, HTTPException, Depends
+from sqlmodel import select, Session
+from db import get_session
+from models import Producto, Categoria
 from schemas import ProductoCreate, ProductoRead
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
 @router.post("/", response_model=ProductoRead)
-def crear_producto(producto: ProductoCreate):
-    with Session(engine) as session:
-        nuevo = Producto.from_orm(producto)
-        session.add(nuevo)
-        session.commit()
-        session.refresh(nuevo)
-        return nuevo
+def crear_producto(data: ProductoCreate, session: Session = Depends(get_session)):
+    categoria = session.get(Categoria, data.categoria_id)
+    if not categoria or not categoria.activa:
+        raise HTTPException(status_code=404, detail="Categoría no válida")
+    if data.stock < 0:
+        raise HTTPException(status_code=400, detail="Stock no puede ser negativo")
+    nuevo = Producto(**data.model_dump())
+    session.add(nuevo)
+    session.commit()
+    session.refresh(nuevo)
+    return nuevo
 
 @router.get("/", response_model=list[ProductoRead])
-def listar_productos():
-    with Session(engine) as session:
-        productos = session.exec(select(Producto)).all()
-        return productos
+def listar_productos(session: Session = Depends(get_session)):
+    return session.exec(select(Producto).where(Producto.activo == True)).all()
