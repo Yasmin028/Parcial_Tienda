@@ -42,3 +42,13 @@ def actualizar_producto(producto_id: int, data: ProductoUpdate, session: Session
     session.commit()
     session.refresh(producto)
     return producto
+
+@router.patch("/{producto_id}/desactivar")
+def desactivar_producto(producto_id: int, session: Session = Depends(get_session)):
+    producto = session.get(Producto, producto_id)
+    if not producto:
+        raise HTTPException(status_code=404)
+    producto.activo = False
+    session.add(producto)
+    session.commit()
+    return {"mensaje":"Producto desactivado"}
