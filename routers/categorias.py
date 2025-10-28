@@ -20,3 +20,13 @@ def crear_categoria(data: CategoriaCreate, session: Session = Depends(get_sessio
 @router.get("/", response_model=list[CategoriaRead])
 def listar_categorias(session: Session = Depends(get_session)):
     return session.exec(select(Categoria).where(Categoria.activa == True)).all()
+
+@router.patch("/{categoria_id}/desactivar")
+def desactivar_categoria(categoria_id: int, session: Session = Depends(get_session)):
+    categoria = session.get(Categoria, categoria_id)
+    if not categoria:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    categoria.activa = False
+    session.add(categoria)
+    session.commit()
+    return {"mensaje": "Categoría desactivada"}
