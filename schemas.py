@@ -18,14 +18,6 @@ class ProductoCreate(SQLModel):
     descripcion: Optional[str] = None
     categoria_id: int
 
-class ProductoRead(SQLModel):
-    id: int
-    nombre: str
-    precio: float
-    stock: int
-    descripcion: Optional[str]
-    activo: bool
-
 class ProductoUpdate(SQLModel):
     nombre: Optional[str] = None
     precio: Optional[float] = None
@@ -33,3 +25,11 @@ class ProductoUpdate(SQLModel):
     descripcion: Optional[str] = None
     activo: Optional[bool] = None
     categoria_id: Optional[int] = None
+
+class ProductoRead(SQLModel):
+    id: int
+    nombre: str
+    precio: float
+    stock: int
+    descripcion: Optional[str]
+    activo: bool
