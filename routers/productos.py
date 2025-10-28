@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import select, Session
 from db import get_session
 from models import Producto, Categoria
-from schemas import ProductoCreate, ProductoRead
+from schemas import ProductoCreate, ProductoRead, ProductoUpdate
+from typing import Optional
 
 router = APIRouter(prefix="/productos", tags=["Productos"])
 
@@ -19,10 +20,13 @@ def crear_producto(data: ProductoCreate, session: Session = Depends(get_session)
     session.refresh(nuevo)
     return nuevo
 
-from typing import Optional
-
-@router.get("/")
-def listar_productos(categoria_id: Optional[int] = None, precio_min: Optional[float] = None, stock_min: Optional[int] = None, session: Session = Depends(get_session)):
+@router.get("/", response_model=list[ProductoRead])
+def listar_productos(
+    categoria_id: Optional[int] = None,
+    precio_min: Optional[float] = None,
+    stock_min: Optional[int] = None,
+    session: Session = Depends(get_session)
+):
     statement = select(Producto).where(Producto.activo == True)
     if categoria_id:
         statement = statement.where(Producto.categoria_id == categoria_id)
@@ -31,7 +35,6 @@ def listar_productos(categoria_id: Optional[int] = None, precio_min: Optional[fl
     if stock_min is not None:
         statement = statement.where(Producto.stock >= stock_min)
     return session.exec(statement).all()
-
 
 @router.get("/{producto_id}", response_model=ProductoRead)
 def obtener_producto(producto_id: int, session: Session = Depends(get_session)):
@@ -44,7 +47,7 @@ def obtener_producto(producto_id: int, session: Session = Depends(get_session)):
 def actualizar_producto(producto_id: int, data: ProductoUpdate, session: Session = Depends(get_session)):
     producto = session.get(Producto, producto_id)
     if not producto:
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
     producto_data = data.model_dump(exclude_unset=True)
     for key, value in producto_data.items():
         setattr(producto, key, value)
@@ -61,19 +64,7 @@ def desactivar_producto(producto_id: int, session: Session = Depends(get_session
     producto.activo = False
     session.add(producto)
     session.commit()
-    return {"mensaje":"Producto desactivado"}
-
-@router.post("/{producto_id}/comprar")
-def comprar_producto(producto_id: int, cantidad: int = 1, session: Session = Depends(get_session)):
-    producto = session.get(Producto, producto_id)
-    if not producto or not producto.activo:
-        raise HTTPException(status_code=404)
-    if producto.stock < cantidad:
-        raise HTTPException(status_code=400, detail="Stock insuficiente")
-    producto.stock -= cantidad
-    session.add(producto)
-    session.commit()
-    return {"mensaje": "Compra exitosa", "stock_restante": producto.stock}
+    return {"mensaje": "Producto desactivado"}
 
 @router.post("/{producto_id}/comprar")
 def comprar_producto(producto_id: int, cantidad: int = 1, session: Session = Depends(get_session)):
