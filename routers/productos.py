@@ -29,3 +29,16 @@ def obtener_producto(producto_id: int, session: Session = Depends(get_session)):
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
+
+@router.put("/{producto_id}", response_model=ProductoRead)
+def actualizar_producto(producto_id: int, data: ProductoUpdate, session: Session = Depends(get_session)):
+    producto = session.get(Producto, producto_id)
+    if not producto:
+        raise HTTPException(status_code=404)
+    producto_data = data.model_dump(exclude_unset=True)
+    for key, value in producto_data.items():
+        setattr(producto, key, value)
+    session.add(producto)
+    session.commit()
+    session.refresh(producto)
+    return producto
