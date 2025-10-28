@@ -25,3 +25,11 @@ class ProductoRead(SQLModel):
     stock: int
     descripcion: Optional[str]
     activo: bool
+
+class ProductoUpdate(SQLModel):
+    nombre: Optional[str] = None
+    precio: Optional[float] = None
+    stock: Optional[int] = None
+    descripcion: Optional[str] = None
+    activo: Optional[bool] = None
+    categoria_id: Optional[int] = None
