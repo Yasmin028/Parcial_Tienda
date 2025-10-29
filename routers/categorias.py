@@ -35,7 +35,7 @@ def listar_categorias(
 
 # Buscar por ID o nombre
 @router.get("/buscar", response_model=CategoriaRead)
-def obtener_categoria(
+def buscar_categoria(
     id: int | None = Query(default=None),
     nombre: str | None = Query(default=None),
     session: Session = Depends(get_session)
