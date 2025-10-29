@@ -6,21 +6,20 @@ from schemas import CategoriaCreate, CategoriaRead, CategoriaUpdate
 
 router = APIRouter()
 
-# Crear categoría
-@router.post("/", response_model=CategoriaRead, status_code=201)
+
+@router.post("/", response_model=CategoriaRead, status_code=201, summary="Crear nueva categoría")
 def crear_categoria(categoria: CategoriaCreate, session: Session = Depends(get_session)):
     existente = session.exec(select(Categoria).where(Categoria.nombre == categoria.nombre)).first()
     if existente:
         raise HTTPException(status_code=409, detail="Ya existe una categoría con ese nombre.")
     
-    nueva_categoria = Categoria.from_orm(categoria)
+    nueva_categoria = Categoria(**categoria.dict())
     session.add(nueva_categoria)
     session.commit()
-    session.refresh(nueva_categoria)
+    session.refresh(nueva_categoria) 
     return nueva_categoria
 
 
-# Listar categorías
 @router.get("/", response_model=list[CategoriaRead])
 def listar_categorias(
     activas: bool = Query(default=True, description="Filtrar solo categorías activas"),
@@ -33,7 +32,7 @@ def listar_categorias(
     return categorias
 
 
-# Buscar por ID o nombre
+
 @router.get("/buscar", response_model=CategoriaRead)
 def buscar_categoria(
     id: int | None = Query(default=None),
@@ -55,7 +54,7 @@ def buscar_categoria(
     return categoria
 
 
-# Actualizar categoría
+
 @router.put("/{id}", response_model=CategoriaRead)
 def actualizar_categoria(id: int, categoria_update: CategoriaUpdate, session: Session = Depends(get_session)):
     categoria = session.get(Categoria, id)
@@ -71,7 +70,7 @@ def actualizar_categoria(id: int, categoria_update: CategoriaUpdate, session: Se
     return categoria
 
 
-# Desactivar categoría
+
 @router.delete("/{id}", status_code=200)
 def desactivar_categoria(id: int, session: Session = Depends(get_session)):
     categoria = session.get(Categoria, id)

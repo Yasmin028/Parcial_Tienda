@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from db import create_db_and_tables
-from categorias import router as categorias_router
-from productos import router as productos_router
+from routers.categorias import router as categorias_router
+from routers.productos import router as productos_router
 
 app = FastAPI(
     title="API Tienda",
