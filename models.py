@@ -5,8 +5,10 @@ class Categoria(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(index=True, nullable=False)
     descripcion: Optional[str] = None
+    activo: bool = Field(default=True) 
 
     productos: List["Producto"] = Relationship(back_populates="categoria")
+
 
 class Producto(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

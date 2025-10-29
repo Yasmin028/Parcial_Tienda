@@ -1,5 +1,4 @@
-# routers/categorias.py
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from db import get_session
 from models import Categoria
@@ -7,10 +6,9 @@ from schemas import CategoriaCreate, CategoriaRead, CategoriaUpdate
 
 router = APIRouter()
 
-# 🔹 Crear categoría
+# Crear categoría
 @router.post("/", response_model=CategoriaRead, status_code=201)
-def crear_categoria(categoria: CategoriaCreate, session: Session = get_session()):
-    # Validar nombre único
+def crear_categoria(categoria: CategoriaCreate, session: Session = Depends(get_session)):
     existente = session.exec(select(Categoria).where(Categoria.nombre == categoria.nombre)).first()
     if existente:
         raise HTTPException(status_code=409, detail="Ya existe una categoría con ese nombre.")
@@ -22,11 +20,11 @@ def crear_categoria(categoria: CategoriaCreate, session: Session = get_session()
     return nueva_categoria
 
 
-# 🔹 Listar categorías (solo las activas o todas)
+# Listar categorías
 @router.get("/", response_model=list[CategoriaRead])
 def listar_categorias(
-    session: Session = get_session(),
-    activas: bool = Query(default=True, description="Filtrar solo categorías activas")
+    activas: bool = Query(default=True, description="Filtrar solo categorías activas"),
+    session: Session = Depends(get_session)
 ):
     query = select(Categoria)
     if activas:
@@ -35,12 +33,12 @@ def listar_categorias(
     return categorias
 
 
-# 🔹 Obtener categoría por ID o nombre
+# Buscar por ID o nombre
 @router.get("/buscar", response_model=CategoriaRead)
 def obtener_categoria(
-    id: int | None = Query(default=None, description="Buscar por ID"),
-    nombre: str | None = Query(default=None, description="Buscar por nombre"),
-    session: Session = get_session()
+    id: int | None = Query(default=None),
+    nombre: str | None = Query(default=None),
+    session: Session = Depends(get_session)
 ):
     if not id and not nombre:
         raise HTTPException(status_code=400, detail="Debe proporcionar un ID o un nombre para la búsqueda.")
@@ -57,9 +55,9 @@ def obtener_categoria(
     return categoria
 
 
-# 🔹 Actualizar categoría
+# Actualizar categoría
 @router.put("/{id}", response_model=CategoriaRead)
-def actualizar_categoria(id: int, categoria_update: CategoriaUpdate, session: Session = get_session()):
+def actualizar_categoria(id: int, categoria_update: CategoriaUpdate, session: Session = Depends(get_session)):
     categoria = session.get(Categoria, id)
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada.")
@@ -73,9 +71,9 @@ def actualizar_categoria(id: int, categoria_update: CategoriaUpdate, session: Se
     return categoria
 
 
-# 🔹 Desactivar categoría
+# Desactivar categoría
 @router.delete("/{id}", status_code=200)
-def desactivar_categoria(id: int, session: Session = get_session()):
+def desactivar_categoria(id: int, session: Session = Depends(get_session)):
     categoria = session.get(Categoria, id)
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada.")
