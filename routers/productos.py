@@ -11,12 +11,11 @@ router = APIRouter()
 #  Crear producto
 @router.post("/", response_model=ProductoRead, status_code=201, summary="Crear nuevo producto")
 def crear_producto(producto: ProductoCreate, session: Session = Depends(get_session)):
-    # Verificar que la categoría exista
     categoria = session.get(Categoria, producto.categoria_id)
     if not categoria:
         raise HTTPException(status_code=400, detail="La categoría asociada no existe.")
     
-    # Verificar si ya existe un producto con ese nombre
+    
     existente = session.exec(select(Producto).where(Producto.nombre == producto.nombre)).first()
     if existente:
         raise HTTPException(status_code=409, detail="Ya existe un producto con ese nombre.")
@@ -25,7 +24,7 @@ def crear_producto(producto: ProductoCreate, session: Session = Depends(get_sess
         nuevo_producto = Producto(**producto.dict())
         session.add(nuevo_producto)
         session.commit()
-        session.refresh(nuevo_producto)  # Recupera el id generado automáticamente
+        session.refresh(nuevo_producto) 
         return nuevo_producto
     except Exception as e:
         session.rollback()
