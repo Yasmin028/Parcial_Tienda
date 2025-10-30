@@ -19,24 +19,31 @@ class CategoriaUpdate(BaseModel):
 class CategoriaRead(CategoriaBase):
     id: int
 
-    class Config:
-        orm_mode = True
+class Config:
+    orm_mode = True
 
 
 #  PRODUCTOS
 
 class ProductoBase(BaseModel):
     nombre: str
-    precio: float
-    stock: int
+    precio: float = Field(..., gt=0, description="El precio debe ser mayor a 0")
+    stock: int = Field(..., ge=0, description="El stock no puede ser negativo") 
     disponible: bool = True
     categoria_id: Optional[int] = None
 
 class ProductoCreate(ProductoBase):
     pass
 
+class ProductoUpdate(BaseModel):
+    nombre: Optional[str] = None
+    precio: Optional[float] = None
+    stock: Optional[int] = None
+    disponible: Optional[bool] = None
+    categoria_id: Optional[int] = None
+
 class ProductoRead(ProductoBase):
     id: int
 
-    class Config:
-        orm_mode = True
+class Config:
+    orm_mode = True

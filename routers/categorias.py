@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from db import get_session
-from models import Categoria
-from schemas import CategoriaCreate, CategoriaRead, CategoriaUpdate
+from models import Categoria, Producto
+from schemas import CategoriaCreate, CategoriaRead, CategoriaUpdate, ProductoRead
 
 router = APIRouter()
 
@@ -76,8 +76,34 @@ def desactivar_categoria(id: int, session: Session = Depends(get_session)):
     categoria = session.get(Categoria, id)
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada.")
-    
+
     categoria.activo = False
+    productos = session.exec(select(Producto).where(Producto.categoria_id == id)).all()
+    for p in productos:
+        p.disponible = False
+        session.add(p)
     session.add(categoria)
     session.commit()
-    return {"message": f"Categoría '{categoria.nombre}' desactivada correctamente."}
+    return {"message": f"Categoría '{categoria.nombre}' y sus productos fueron desactivados."}
+
+@router.patch("/{categoria_id}/activar", status_code=200)
+def activar_categoria(categoria_id: int, session: Session = Depends(get_session)):
+    categoria = session.get(Categoria, categoria_id)
+    if not categoria:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    if categoria.activo:
+        raise HTTPException(status_code=409, detail="La categoría ya está activa")
+    categoria.activo = True
+    session.add(categoria)
+    session.commit()
+    session.refresh(categoria)
+    return {"message": "Categoría activada correctamente"}
+
+@router.get("/{categoria_id}/productos", response_model=list[ProductoRead])
+def listar_productos_de_categoria(categoria_id: int, session: Session = Depends(get_session)):
+    categoria = session.get(Categoria, categoria_id)
+    if not categoria:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada.")
+
+    productos = session.exec(select(Producto).where(Producto.categoria_id == categoria_id)).all()
+    return productos

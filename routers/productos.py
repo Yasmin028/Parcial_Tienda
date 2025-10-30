@@ -32,10 +32,21 @@ def crear_producto(producto: ProductoCreate, session: Session = Depends(get_sess
 
 
 #  Listar todos los productos
-@router.get("/", response_model=list[ProductoRead], summary="Listar productos")
-def listar_productos(session: Session = Depends(get_session)):
-    productos = session.exec(select(Producto)).all()
-    return productos
+@router.get("/", response_model=list[ProductoRead], summary="Listar productos con filtros")
+def listar_productos(
+    stock_min: Optional[int] = Query(None),
+    precio_max: Optional[float] = Query(None),
+    categoria_id: Optional[int] = Query(None),
+    session: Session = Depends(get_session)
+):
+    query = select(Producto)
+    if stock_min is not None:
+        query = query.where(Producto.stock >= stock_min)
+    if precio_max is not None:
+        query = query.where(Producto.precio <= precio_max)
+    if categoria_id is not None:
+        query = query.where(Producto.categoria_id == categoria_id)
+    return session.exec(query).all()
 
 
 #  Buscar producto por ID o nombre
@@ -78,6 +89,18 @@ def actualizar_producto(producto_id: int, producto_update: ProductoUpdate, sessi
         session.rollback()
         raise HTTPException(status_code=500, detail=f"Error al actualizar el producto: {e}")
 
+# Comprar producto
+@router.post("/{producto_id}/comprar", summary="Comprar producto")
+def comprar_producto(producto_id: int, cantidad: int, session: Session = Depends(get_session)):
+    producto = session.get(Producto, producto_id)
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado.")
+    if producto.stock < cantidad:
+        raise HTTPException(status_code=400, detail="Stock insuficiente.")
+    producto.stock -= cantidad
+    session.add(producto)
+    session.commit()
+    return {"message": f"Compra exitosa. Stock restante: {producto.stock}"}
 
 # Eliminar producto
 @router.delete("/{producto_id}", status_code=200, summary="Eliminar producto")
