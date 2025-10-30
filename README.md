@@ -72,6 +72,14 @@ Al comprar un producto, el stock disminuye automáticamente.
 
 No se pueden registrar productos sin categoría válida.
 
+🔍 Manejo de errores
+Código	 Descripción	  Ejemplo
+200	     OK	            Solicitud exitosa
+201	     Created	      Categoría o producto creado
+400	     Bad Request  	Datos inválidos o incompletos
+404	     Not Found    	Recurso no encontrado
+409	     Conflict	      Nombre duplicado o estado incompatible
+
 🧰 Tecnologías utilizadas
 
 FastAPI 
