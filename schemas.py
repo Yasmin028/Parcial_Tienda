@@ -1,26 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, BaseModel
 from typing import Optional
 
 # CATEGORÍAS
 
-from pydantic import Field, field_validator, BaseModel
-
-class ProductoBase(BaseModel):
-    nombre: str
-    precio: float = Field(..., gt=0)
-    stock: int = Field(..., ge=0)
-
-    @field_validator("precio")
-    def validar_precio(cls, v):
-        if v <= 0:
-            raise ValueError("El precio debe ser mayor que 0")
-        return v
-
-    @field_validator("stock")
-    def validar_stock(cls, v):
-        if v < 0:
-            raise ValueError("El stock no puede ser negativo")
-        return v
+class CategoriaBase(BaseModel):
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: Optional[str] = None
+    activo: bool = True
 
 class CategoriaCreate(CategoriaBase):
     pass
@@ -41,10 +27,22 @@ class Config:
 
 class ProductoBase(BaseModel):
     nombre: str
-    precio: float = Field(..., gt=0, description="El precio debe ser mayor a 0")
-    stock: int = Field(..., ge=0, description="El stock no puede ser negativo") 
-    disponible: bool = True
+    precio: float
+    stock: int
     categoria_id: Optional[int] = None
+
+    @field_validator("precio")
+    def validar_precio(cls, v):
+        if v <= 0:
+            raise ValueError("El precio debe ser mayor que 0")
+        return v
+
+    @field_validator("stock")
+    def validar_stock(cls, v):
+        if v < 0:
+            raise ValueError("El stock no puede ser negativo")
+        return v
+
 
 class ProductoCreate(ProductoBase):
     pass
